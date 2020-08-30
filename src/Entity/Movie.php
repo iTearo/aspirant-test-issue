@@ -1,72 +1,54 @@
 <?php
-/**
- * 2019-06-28.
- */
 
 declare(strict_types=1);
 
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\Index;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\MovieRepository")
- * @ORM\Table(name="movie", indexes={@Index(columns={"title"})})
+ * @ORM\Entity(repositoryClass="App\Repository\Movie\DoctrineMovieRepository")
+ * @ORM\Table(name="movie")
  */
 final class Movie
 {
     /**
-     * @var int|null
      * @ORM\Id()
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
-     * @var string|null
      * @ORM\Column()
      */
-    private $title;
+    private ?string $title;
 
     /**
-     * @var string|null
      * @ORM\Column()
      */
-    private $link;
+    private ?string $link;
 
     /**
-     * @var string|null
      * @ORM\Column(type="text")
      */
-    private $description;
+    private ?string $description;
 
     /**
-     * @var \DateTime|null
-     * @ORM\Column(type="datetime", name="pub_date")
+     * @ORM\Column(type="datetime_immutable", name="pub_date")
      */
-    private $pubDate;
+    private \DateTimeImmutable $pubDate;
 
     /**
-     * @var string|null
      * @ORM\Column(nullable=true)
      */
-    private $image;
+    private ?string $image = null;
 
-    /**
-     * @return string|null
-     */
     public function getImage(): ?string
     {
         return $this->image;
     }
 
-    /**
-     * @param string|null $image
-     *
-     * @return Movie
-     */
     public function setImage(?string $image): self
     {
         $this->image = $image;
@@ -74,27 +56,16 @@ final class Movie
         return $this;
     }
 
-    /**
-     * @return int|null
-     */
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * @return string|null
-     */
     public function getTitle(): ?string
     {
         return $this->title;
     }
 
-    /**
-     * @param string|null $title
-     *
-     * @return Movie
-     */
     public function setTitle(?string $title): self
     {
         $this->title = $title;
@@ -102,19 +73,11 @@ final class Movie
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getLink(): ?string
     {
         return $this->link;
     }
 
-    /**
-     * @param string|null $link
-     *
-     * @return Movie
-     */
     public function setLink(?string $link): self
     {
         $this->link = $link;
@@ -122,19 +85,11 @@ final class Movie
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /**
-     * @param string|null $description
-     *
-     * @return Movie
-     */
     public function setDescription(?string $description): self
     {
         $this->description = $description;
@@ -142,20 +97,12 @@ final class Movie
         return $this;
     }
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getPubDate(): ?\DateTime
+    public function getPubDate(): \DateTimeImmutable
     {
         return $this->pubDate;
     }
 
-    /**
-     * @param \DateTime|null $pubDate
-     *
-     * @return Movie
-     */
-    public function setPubDate(?\DateTime $pubDate): self
+    public function setPubDate(\DateTimeImmutable $pubDate): self
     {
         $this->pubDate = $pubDate;
 
