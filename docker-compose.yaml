@@ -13,6 +13,8 @@ services:
       APP_ENV: 'dev'
     ports:
       - 8080:8080
+    links:
+      - database
 
   nginx:
     container_name: test-issue-nginx
