@@ -41,9 +41,10 @@ class WebProvider implements ServiceProviderInterface
 
     protected function defineRoutes(Container $container): void
     {
+        /** @var RouteCollectorInterface $router */
         $router = $container->get(RouteCollectorInterface::class);
 
-        $router->group('/', function (RouteCollectorProxyInterface $router) use ($container) {
+        $router->group('', function (RouteCollectorProxyInterface $router) use ($container) {
             $routes = self::getRoutes($container);
             foreach ($routes as $routeName => $routeConfig) {
                 $router->{$routeConfig['method']}($routeConfig['path'] ?? '', $routeConfig['controller'] . ':' . $routeConfig['action'])

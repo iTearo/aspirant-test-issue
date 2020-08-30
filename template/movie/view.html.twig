@@ -1,0 +1,19 @@
+{% extends 'main.html.twig' %}
+
+{% block title %}{{ movie.title }}{% endblock %}
+
+{% block content %}
+    <a href="{{ router.urlFor('movieList') }}" class="btn btn-secondary float-right">Go back</a>
+
+    <h1 class="my-4">{{ movie.title }}</h1>
+
+    <div class="card">
+        <img class="card-img-top m-auto" src="{{ movie.image }}" alt="{{ movie.title }}" style="width: auto">
+
+        <div class="card-body">
+            <p class="card-text">{{ movie.description }}</p>
+        </div>
+
+        <div class="card-footer text-muted">Posted {{ movie.pubDate.format('d.m.Y') }}</div>
+    </div>
+{% endblock %}

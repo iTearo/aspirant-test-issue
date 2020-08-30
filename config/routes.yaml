@@ -1,6 +1,11 @@
-main:
+movieView:
   method: 'get'
-  path: ~
+  path: /movie/{movieId:[0-9]+}
+  controller: App\Controller\MovieController
+  action: viewAction
+
+movieList:
+  method: 'get'
+  path: /
   controller: App\Controller\MovieController
   action: listAction
-

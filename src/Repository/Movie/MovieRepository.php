@@ -13,6 +13,8 @@ interface MovieRepository
      */
     public function getAll(): array;
 
+    public function getById(int $id): ?Movie;
+
     public function getByTitle(string $title): ?Movie;
 
     public function save(Movie $movie): void;

@@ -17,6 +17,11 @@ class DoctrineMovieRepository extends EntityRepository implements MovieRepositor
         return (array) $this->findAll();
     }
 
+    public function getById(int $id): ?Movie
+    {
+        return $this->find($id);
+    }
+
     public function getByTitle(string $title): ?Movie
     {
         return $this->findOneBy(['title' => $title]);
