@@ -1,0 +1,35 @@
+{% extends 'main.html.twig' %}
+
+{% block title %}{{ movies | length }} iTunes Movie movie{% endblock %}
+
+{% block content %}
+    <h1 class="my-4">{{ movies | length }} iTunes Movie movie</h1>
+
+    <div class="row">
+        {% for movie in movies %}
+            <div class="col-3 mb-4">
+                <div class="card">
+                    <img class="card-img-top" src="{{ movie.image }}" alt="{{ movie.title }}">
+
+                    <div class="card-body">
+                        <h2 class="card-title">{{ movie.title }}</h2>
+                        <p class="card-text">{{ movie.description }}</p>
+                        <a href="#{{ movie.id }}" class="btn btn-primary">Read More &rarr;</a>
+                    </div>
+
+                    <div class="card-footer text-muted">Posted {{ movie.pubDate.format('d.m.Y') }}</div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    <ul class="pagination justify-content-center mb-4">
+        <li class="page-item disabled">
+            <a class="page-link" href="#">&larr; Older</a>
+        </li>
+        <li class="page-item disabled">
+            <a class="page-link" href="#">Newer &rarr;</a>
+        </li>
+    </ul>
+{% endblock %}

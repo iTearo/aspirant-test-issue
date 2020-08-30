@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Provider;
 
-use App\Controller\HomeController;
+use App\Controller\MovieController;
 use App\Entity\Movie;
 use App\Repository\Movie\MovieRepository;
 use App\Support\Config;
@@ -32,7 +32,7 @@ class WebProvider implements ServiceProviderInterface
 
     protected function defineControllerDi(Container $container): void
     {
-        $container->set(HomeController::class, fn() => new HomeController(
+        $container->set(MovieController::class, fn() => new MovieController(
             $container->get(RouteCollectorInterface::class),
             $container->get(Environment::class),
             $container->get(MovieRepository::class))

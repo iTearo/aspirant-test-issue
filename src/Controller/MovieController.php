@@ -11,7 +11,7 @@ use Slim\Exception\HttpBadRequestException;
 use Slim\Interfaces\RouteCollectorInterface;
 use Twig\Environment;
 
-class HomeController
+class MovieController
 {
     private RouteCollectorInterface $routeCollector;
 
@@ -26,11 +26,11 @@ class HomeController
         $this->movieRepository = $movieRepository;
     }
 
-    public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function listAction(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         try {
-            $data = $this->twig->render('home/index.html.twig', [
-                'trailers' => $this->movieRepository->getAll(),
+            $data = $this->twig->render('movie/list.html.twig', [
+                'movies' => $this->movieRepository->getAll(),
             ]);
 
         } catch (\Exception $e) {
