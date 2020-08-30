@@ -6,9 +6,9 @@ namespace App\Provider;
 
 use App\Command\FetchDataCommand;
 use App\Command\RouteListCommand;
+use App\Repository\Movie\MovieRepository;
 use App\Support\CommandMap;
 use App\Support\ServiceProviderInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Phinx\Console\Command\Breakpoint;
 use Phinx\Console\Command\Create;
 use Phinx\Console\Command\Migrate;
@@ -16,7 +16,6 @@ use Phinx\Console\Command\Rollback;
 use Phinx\Console\Command\SeedCreate;
 use Phinx\Console\Command\SeedRun;
 use Phinx\Console\Command\Status;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Slim\Interfaces\RouteCollectorInterface;
@@ -27,13 +26,15 @@ class ConsoleCommandProvider implements ServiceProviderInterface
 {
     public function register(Container $container): void
     {
-        $container->set(RouteListCommand::class, static function (ContainerInterface $container) {
-            return new RouteListCommand($container->get(RouteCollectorInterface::class));
-        });
+        $container->set(RouteListCommand::class, fn() => new RouteListCommand(
+            $container->get(RouteCollectorInterface::class)
+        ));
 
-        $container->set(FetchDataCommand::class, static function (ContainerInterface $container) {
-            return new FetchDataCommand($container->get(ClientInterface::class), $container->get(LoggerInterface::class), $container->get(EntityManagerInterface::class));
-        });
+        $container->set(FetchDataCommand::class, fn() => new FetchDataCommand(
+            $container->get(ClientInterface::class),
+            $container->get(LoggerInterface::class),
+            $container->get(MovieRepository::class)
+        ));
 
         $container->get(CommandMap::class)->set(RouteListCommand::getDefaultName(), RouteListCommand::class);
         $container->get(CommandMap::class)->set(FetchDataCommand::getDefaultName(), FetchDataCommand::class);

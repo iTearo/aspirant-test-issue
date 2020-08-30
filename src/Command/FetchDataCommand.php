@@ -1,14 +1,11 @@
 <?php
-/**
- * 2019-06-28.
- */
 
 declare(strict_types=1);
 
 namespace App\Command;
 
 use App\Entity\Movie;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\Movie\MovieRepository;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
@@ -20,158 +17,143 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-/**
- * Class FetchDataCommand.
- */
 class FetchDataCommand extends Command
 {
-    private const SOURCE = 'https://trailers.apple.com/trailers/home/rss/newtrailers.rss';
+    protected static $defaultName = 'app:fetch:trailers';
 
-    /**
-     * @var string
-     */
-    protected static $defaultName = 'fetch:trailers';
+    private const DEFAULT_SOURCE = 'https://trailers.apple.com/trailers/home/rss/newtrailers.rss';
 
-    /**
-     * @var ClientInterface
-     */
-    private $httpClient;
+    private const OPTION_SOURCE = 'source';
 
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+    private const DEFAULT_MAX_NUM = 10;
 
-    /**
-     * @var string
-     */
-    private $source;
+    private const OPTION_MAX_NUM = 'max-num';
 
-    /**
-     * @var EntityManagerInterface
-     */
-    private $doctrine;
+    private ClientInterface $httpClient;
 
-    /**
-     * FetchDataCommand constructor.
-     *
-     * @param ClientInterface        $httpClient
-     * @param LoggerInterface        $logger
-     * @param EntityManagerInterface $em
-     * @param string|null            $name
-     */
-    public function __construct(ClientInterface $httpClient, LoggerInterface $logger, EntityManagerInterface $em, string $name = null)
-    {
+    private LoggerInterface $logger;
+
+    private MovieRepository $movieRepository;
+
+    public function __construct(
+        ClientInterface $httpClient,
+        LoggerInterface $logger,
+        MovieRepository $movieRepository,
+        string $name = null
+    ) {
         parent::__construct($name);
         $this->httpClient = $httpClient;
         $this->logger = $logger;
-        $this->doctrine = $em;
+        $this->movieRepository = $movieRepository;
     }
 
     public function configure(): void
     {
         $this
             ->setDescription('Fetch data from iTunes Movie Trailers')
-            ->addArgument('source', InputArgument::OPTIONAL, 'Overwrite source')
+            ->addOption(
+                '--' . self::OPTION_SOURCE,
+                null,InputArgument::OPTIONAL,
+                'Overwrite source url',
+                self::DEFAULT_SOURCE
+            )
+            ->addOption(
+                '--' . self::OPTION_MAX_NUM,
+                null, InputArgument::OPTIONAL,
+                'Overwrite maximum number of loaded movies',
+                self::DEFAULT_MAX_NUM
+            )
         ;
     }
 
-    /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     *
-     * @return int
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->logger->info(sprintf('Start %s at %s', __CLASS__, (string) date_create()->format(DATE_ATOM)));
-        $source = self::SOURCE;
-        if ($input->getArgument('source')) {
-            $source = $input->getArgument('source');
-        }
+
+        $source = $input->getOption(self::OPTION_SOURCE);
+
+        $maxNum = (int) $input->getOption(self::OPTION_MAX_NUM);
 
         if (!is_string($source)) {
             throw new RuntimeException('Source must be string');
         }
+
         $io = new SymfonyStyle($input, $output);
+
         $io->title(sprintf('Fetch data from %s', $source));
 
         try {
             $response = $this->httpClient->sendRequest(new Request('GET', $source));
+
         } catch (ClientExceptionInterface $e) {
             throw new RuntimeException($e->getMessage());
         }
+
         if (($status = $response->getStatusCode()) !== 200) {
             throw new RuntimeException(sprintf('Response status is %d, expected %d', $status, 200));
         }
+
         $data = $response->getBody()->getContents();
-        $this->processXml($data);
+
+        $this->processXml($data, $maxNum);
 
         $this->logger->info(sprintf('End %s at %s', __CLASS__, (string) date_create()->format(DATE_ATOM)));
 
         return 0;
     }
 
-    /**
-     * @param string $data
-     *
-     * @throws \Exception
-     */
-    protected function processXml(string $data): void
+    protected function processXml(string $data, int $maxNum): void
     {
         $xml = (new \SimpleXMLElement($data))->children();
-//        $namespace = $xml->getNamespaces(true)['content'];
-//        dd((string) $xml->channel->item[0]->children($namespace)->encoded);
 
         if (!property_exists($xml, 'channel')) {
             throw new RuntimeException('Could not find \'channel\' element in feed');
         }
+
+        $namespace = $xml->getNamespaces(true)['content'];
+
         foreach ($xml->channel->item as $item) {
-            $trailer = $this->getMovie((string) $item->title)
+            if ($maxNum-- === 0) {
+                break;
+            }
+
+            $movie = $this->getMovie((string) $item->title)
                 ->setTitle((string) $item->title)
                 ->setDescription((string) $item->description)
                 ->setLink((string) $item->link)
                 ->setPubDate($this->parseDate((string) $item->pubDate))
+                ->setImage($this->parseImage($item, $namespace))
             ;
 
-            $this->doctrine->persist($trailer);
+            $this->movieRepository->save($movie);
         }
-
-        $this->doctrine->flush();
     }
 
-    /**
-     * @param string $date
-     *
-     * @return \DateTime
-     *
-     * @throws \Exception
-     */
-    protected function parseDate(string $date): \DateTime
+    protected function parseDate(string $date): \DateTimeImmutable
     {
-        return new \DateTime($date);
+        /** @noinspection PhpUnhandledExceptionInspection */
+        return new \DateTimeImmutable($date);
     }
 
-    /**
-     * @param string $title
-     *
-     * @return Movie
-     */
+    protected function parseImage($item, $namespace): string
+    {
+        $itemContent = (string) $item->children($namespace)->encoded;
+        preg_match('/src="https.*"/mU', $itemContent, $matches);
+        return substr($matches[0], 5, -1);
+    }
+
     protected function getMovie(string $title): Movie
     {
-        $item = $this->doctrine->getRepository(Movie::class)->findOneBy(['title' => $title]);
+        $movie = $this->movieRepository->getByTitle($title);
 
-        if ($item === null) {
+        if ($movie === null) {
             $this->logger->info('Create new Movie', ['title' => $title]);
-            $item = new Movie();
+            $movie = new Movie();
+
         } else {
             $this->logger->info('Move found', ['title' => $title]);
         }
 
-        if (!($item instanceof Movie)) {
-            throw new RuntimeException('Wrong type!');
-        }
-
-        return $item;
+        return $movie;
     }
 }

@@ -12,4 +12,8 @@ interface MovieRepository
      * @return Movie[]
      */
     public function getAll(): array;
+
+    public function getByTitle(string $title): ?Movie;
+
+    public function save(Movie $movie): void;
 }

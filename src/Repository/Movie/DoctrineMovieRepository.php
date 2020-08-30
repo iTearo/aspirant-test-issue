@@ -16,4 +16,18 @@ class DoctrineMovieRepository extends EntityRepository implements MovieRepositor
     {
         return (array) $this->findAll();
     }
+
+    public function getByTitle(string $title): ?Movie
+    {
+        return $this->findOneBy(['title' => $title]);
+    }
+
+    public function save(Movie $movie): void
+    {
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $this->getEntityManager()->persist($movie);
+
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $this->getEntityManager()->flush($movie);
+    }
 }
