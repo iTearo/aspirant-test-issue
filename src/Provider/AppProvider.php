@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Provider;
 
+use App\Entity\Movie;
+use App\Repository\Movie\MovieRepository;
+use App\Service\MovieService;
 use App\Support\{CommandMap, Config, LoggerErrorHandler, NotFoundHandler, ServiceProviderInterface};
+use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client as GuzzleClient;
 use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 use Monolog\{Formatter\FormatterInterface, Handler\HandlerInterface, Logger};
@@ -22,6 +26,8 @@ use Slim\{CallableResolver,
     Psr7\Factory\ResponseFactory,
     Routing\RouteCollector,
     Routing\RouteResolver};
+use JMS\Serializer\SerializerBuilder;
+use JMS\Serializer\SerializerInterface;
 use Twig\Environment;
 use UltraLite\Container\Container;
 
@@ -30,12 +36,7 @@ use UltraLite\Container\Container;
  */
 class AppProvider implements ServiceProviderInterface
 {
-    /**
-     * @param Container $container
-     *
-     * @return mixed|void
-     */
-    public function register(Container $container)
+    public function register(Container $container): void
     {
         // Console commands
         $container->set(CommandMap::class, static function () {
@@ -153,5 +154,13 @@ class AppProvider implements ServiceProviderInterface
         $container->set(ClientInterface::class, static function (ContainerInterface $container) {
             return $container->get(GuzzleAdapter::class);
         });
+
+        $container->set(SerializerInterface::class, static fn() => SerializerBuilder::create()->build());
+
+        $container->set(MovieRepository::class, fn() => $container->get(EntityManagerInterface::class)->getRepository(Movie::class));
+
+        $container->set(MovieService::class, static fn() => new MovieService(
+            $container->get(MovieRepository::class)
+        ));
     }
 }

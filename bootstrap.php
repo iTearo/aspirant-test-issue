@@ -7,10 +7,13 @@ use App\Provider\RenderProvider;
 use App\Provider\WebProvider;
 use App\Support\Config;
 use App\Support\ServiceProviderInterface;
+use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\Dotenv\Dotenv;
 use UltraLite\Container\Container;
 
 require_once __DIR__ . '/vendor/autoload.php';
+
+AnnotationRegistry::registerLoader('class_exists');
 
 (new Dotenv())->loadEnv(__DIR__ . '/.env');
 

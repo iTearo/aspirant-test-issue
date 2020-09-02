@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository\Movie;
 
 use App\Entity\Movie;
+use App\Exception\NotFoundException;
 
 interface MovieRepository
 {
@@ -14,6 +15,13 @@ interface MovieRepository
     public function getAll(): array;
 
     public function getById(int $id): ?Movie;
+
+    /**
+     * @param int $id
+     * @return Movie
+     * @throws NotFoundException
+     */
+    public function getByIdOrFail(int $id): Movie;
 
     public function getByTitle(string $title): ?Movie;
 

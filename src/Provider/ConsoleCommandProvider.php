@@ -6,9 +6,10 @@ namespace App\Provider;
 
 use App\Command\FetchDataCommand;
 use App\Command\RouteListCommand;
-use App\Repository\Movie\MovieRepository;
+use App\Service\MovieService;
 use App\Support\CommandMap;
 use App\Support\ServiceProviderInterface;
+use JMS\Serializer\SerializerInterface;
 use Phinx\Console\Command\Breakpoint;
 use Phinx\Console\Command\Create;
 use Phinx\Console\Command\Migrate;
@@ -31,9 +32,10 @@ class ConsoleCommandProvider implements ServiceProviderInterface
         ));
 
         $container->set(FetchDataCommand::class, fn() => new FetchDataCommand(
+            $container->get(SerializerInterface::class),
             $container->get(ClientInterface::class),
             $container->get(LoggerInterface::class),
-            $container->get(MovieRepository::class)
+            $container->get(MovieService::class)
         ));
 
         $container->get(CommandMap::class)->set(RouteListCommand::getDefaultName(), RouteListCommand::class);

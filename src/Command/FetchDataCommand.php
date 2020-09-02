@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Entity\Movie;
-use App\Repository\Movie\MovieRepository;
-use GuzzleHttp\Psr7\Request;
-use Psr\Http\Client\ClientExceptionInterface;
+use App\Dto\MovieDto;
+use App\Lib\AppleTrailers\AppleTrailersClient;
+use App\Lib\AppleTrailers\Dto\Trailer;
+use App\Service\MovieService;
+use JMS\Serializer\SerializerInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -29,22 +29,26 @@ class FetchDataCommand extends Command
 
     private const OPTION_MAX_NUM = 'max-num';
 
+    private SerializerInterface $serializer;
+
     private ClientInterface $httpClient;
 
     private LoggerInterface $logger;
 
-    private MovieRepository $movieRepository;
+    private MovieService $movieService;
 
     public function __construct(
+        SerializerInterface $serializer,
         ClientInterface $httpClient,
         LoggerInterface $logger,
-        MovieRepository $movieRepository,
+        MovieService $movieRepository,
         string $name = null
     ) {
         parent::__construct($name);
+        $this->serializer = $serializer;
         $this->httpClient = $httpClient;
         $this->logger = $logger;
-        $this->movieRepository = $movieRepository;
+        $this->movieService = $movieRepository;
     }
 
     public function configure(): void
@@ -74,86 +78,71 @@ class FetchDataCommand extends Command
 
         $maxNum = (int) $input->getOption(self::OPTION_MAX_NUM);
 
-        if (!is_string($source)) {
-            throw new RuntimeException('Source must be string');
-        }
-
         $io = new SymfonyStyle($input, $output);
 
         $io->title(sprintf('Fetch data from %s', $source));
 
-        try {
-            $response = $this->httpClient->sendRequest(new Request('GET', $source));
+        $trailers = $this->makeTrailersClient($source)->fetchTrailers($maxNum);
 
-        } catch (ClientExceptionInterface $e) {
-            throw new RuntimeException($e->getMessage());
-        }
+        $movieDtos = $this->makeMovieDtosFromTrailers($trailers);
 
-        if (($status = $response->getStatusCode()) !== 200) {
-            throw new RuntimeException(sprintf('Response status is %d, expected %d', $status, 200));
-        }
-
-        $data = $response->getBody()->getContents();
-
-        $this->processXml($data, $maxNum);
+        $this->createOrUpdateMovies($movieDtos);
 
         $this->logger->info(sprintf('End %s at %s', __CLASS__, (string) date_create()->format(DATE_ATOM)));
 
         return 0;
     }
 
-    protected function processXml(string $data, int $maxNum): void
+    protected function makeTrailersClient(string $source): AppleTrailersClient
     {
-        $xml = (new \SimpleXMLElement($data))->children();
+        return new AppleTrailersClient($this->serializer, $this->httpClient, $source);
+    }
 
-        if (!property_exists($xml, 'channel')) {
-            throw new RuntimeException('Could not find \'channel\' element in feed');
-        }
+    /**
+     * @param MovieDto[] $movieDtos
+     */
+    protected function createOrUpdateMovies(array $movieDtos): void
+    {
+        foreach ($movieDtos as $movieDto) {
+            $movie = $this->movieService->getByTitle($movieDto->title);
 
-        $namespace = $xml->getNamespaces(true)['content'];
+            if ($movie !== null) {
+                $this->logger->info('Move found', ['title' => $movieDto->title]);
 
-        foreach ($xml->channel->item as $item) {
-            if ($maxNum-- === 0) {
-                break;
+                /** @noinspection PhpUnhandledExceptionInspection */
+                $this->movieService->update($movie->getId(), $movieDto);
+
+            } else {
+                $this->logger->info('Create new Movie', ['title' => $movieDto->title]);
+
+                $this->movieService->create($movieDto);
             }
-
-            $movie = $this->getMovie((string) $item->title)
-                ->setTitle((string) $item->title)
-                ->setDescription((string) $item->description)
-                ->setLink((string) $item->link)
-                ->setPubDate($this->parseDate((string) $item->pubDate))
-                ->setImage($this->parseImage($item, $namespace))
-            ;
-
-            $this->movieRepository->save($movie);
         }
     }
 
-    protected function parseDate(string $date): \DateTimeImmutable
+    /**
+     * @param Trailer[] $trailers
+     * @return MovieDto[]
+     */
+    protected function makeMovieDtosFromTrailers(array $trailers): array
     {
-        /** @noinspection PhpUnhandledExceptionInspection */
-        return new \DateTimeImmutable($date);
-    }
+        $movies = [];
 
-    protected function parseImage($item, $namespace): string
-    {
-        $itemContent = (string) $item->children($namespace)->encoded;
-        preg_match('/src="https.*"/mU', $itemContent, $matches);
-        return substr($matches[0], 5, -1);
-    }
-
-    protected function getMovie(string $title): Movie
-    {
-        $movie = $this->movieRepository->getByTitle($title);
-
-        if ($movie === null) {
-            $this->logger->info('Create new Movie', ['title' => $title]);
-            $movie = new Movie();
-
-        } else {
-            $this->logger->info('Move found', ['title' => $title]);
+        foreach ($trailers as $trailer) {
+            $movies[] = $this->makeMovieDtoFromTrailer($trailer);
         }
 
-        return $movie;
+        return $movies;
+    }
+
+    protected function makeMovieDtoFromTrailer(Trailer $trailer): MovieDto
+    {
+        $movieDto = new MovieDto();
+        $movieDto->title = $trailer->title;
+        $movieDto->description = $trailer->description;
+        $movieDto->link = $trailer->link;
+        $movieDto->pubDate = $trailer->pubDate;
+        $movieDto->image = $trailer->image;
+        return $movieDto;
     }
 }
