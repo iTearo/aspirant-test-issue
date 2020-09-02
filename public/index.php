@@ -1,6 +1,8 @@
 <?php
 
 /** @var ContainerInterface $container */
+
+use App\Support\Config;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Slim\App;
@@ -23,6 +25,10 @@ $app = new App(
     $container->get(RouteCollectorInterface::class),
     $container->get(RouteResolverInterface::class)
 );
+
+if ($container->get(Config::class)->get('environment') === 'dev') {
+    $app->addErrorMiddleware(true, true, true);
+}
 
 $app->add($container->get(RoutingMiddleware::class));
 $app->add($container->get(ErrorMiddleware::class));
