@@ -6,7 +6,7 @@ namespace App\Provider;
 
 use App\Command\FetchDataCommand;
 use App\Command\RouteListCommand;
-use App\Service\MovieService;
+use Domain\Movie\MovieService;
 use App\Support\CommandMap;
 use App\Support\ServiceProviderInterface;
 use JMS\Serializer\SerializerInterface;

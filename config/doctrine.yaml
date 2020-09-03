@@ -2,5 +2,6 @@ connection:
   driver: 'pdo_mysql'
   charset: 'utf8mb4'
 
-mapping:
-  - Entity
+mappings_path: '/db/mappings'
+
+naming_strategy_class: \Doctrine\ORM\Mapping\UnderscoreNamingStrategy

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Lib\AppleTrailers;
+namespace Lib\AppleTrailers;
 
-use App\Lib\AppleTrailers\Dto\Item;
-use App\Lib\AppleTrailers\Dto\Rss;
-use App\Lib\AppleTrailers\Dto\Trailer;
+use Lib\AppleTrailers\Dto\Item;
+use Lib\AppleTrailers\Dto\Rss;
+use Lib\AppleTrailers\Dto\Trailer;
 use GuzzleHttp\Psr7\Request;
 use JMS\Serializer\SerializerInterface;
 use Psr\Http\Client\ClientExceptionInterface;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Movie;
+namespace Domain\Movie;
 
-use App\Entity\Movie;
-use App\Exception\NotFoundException;
+use Domain\Movie\Movie;
+use Domain\Exception\NotFoundException;
 
 interface MovieRepository
 {

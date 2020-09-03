@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Provider;
 
-use App\Entity\Movie;
-use App\Repository\Movie\MovieRepository;
-use App\Service\MovieService;
+use Domain\Movie\Movie;
+use Domain\Movie\MovieRepository;
+use Domain\Movie\MovieService;
 use App\Support\{CommandMap, Config, LoggerErrorHandler, NotFoundHandler, ServiceProviderInterface};
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client as GuzzleClient;

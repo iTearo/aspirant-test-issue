@@ -2,46 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Entity;
+namespace Domain\Movie;
 
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * @ORM\Entity(repositoryClass="App\Repository\Movie\DoctrineMovieRepository")
- * @ORM\Table(name="movie")
- */
 final class Movie
 {
-    /**
-     * @ORM\Id()
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
     private ?int $id = null;
 
-    /**
-     * @ORM\Column()
-     */
     private ?string $title;
 
-    /**
-     * @ORM\Column()
-     */
     private ?string $link;
 
-    /**
-     * @ORM\Column(type="text")
-     */
     private ?string $description;
 
-    /**
-     * @ORM\Column(type="datetime_immutable", name="pub_date")
-     */
     private \DateTimeImmutable $pubDate;
 
-    /**
-     * @ORM\Column(nullable=true)
-     */
     private ?string $image = null;
 
     public function getImage(): ?string

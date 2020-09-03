@@ -2,14 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Movie;
+namespace Domain\Movie\Data;
 
-use App\Entity\Movie;
-use App\Exception\NotFoundException;
+use Domain\Exception\NotFoundException;
 use Doctrine\ORM\EntityRepository;
+use Domain\Movie\Movie;
+use Domain\Movie\MovieRepository;
 
 class DoctrineMovieRepository extends EntityRepository implements MovieRepository
 {
+    public const TABLE = 'movie';
+
     /**
      * @return Movie[]
      */
@@ -20,6 +23,7 @@ class DoctrineMovieRepository extends EntityRepository implements MovieRepositor
 
     public function getById(int $id): ?Movie
     {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->find($id);
     }
 
@@ -39,6 +43,7 @@ class DoctrineMovieRepository extends EntityRepository implements MovieRepositor
 
     public function getByTitle(string $title): ?Movie
     {
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->findOneBy(['title' => $title]);
     }
 

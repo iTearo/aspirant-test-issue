@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Dto\MovieDto;
-use App\Lib\AppleTrailers\AppleTrailersClient;
-use App\Lib\AppleTrailers\Dto\Trailer;
-use App\Service\MovieService;
+use Domain\Movie\Dto\MovieDto;
+use \Lib\AppleTrailers\AppleTrailersClient;
+use \Lib\AppleTrailers\Dto\Trailer;
+use Domain\Movie\MovieService;
 use JMS\Serializer\SerializerInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;

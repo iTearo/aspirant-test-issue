@@ -9,11 +9,10 @@ namespace App\Provider;
 
 use App\Support\Config;
 use App\Support\ServiceProviderInterface;
-use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Cache\FilesystemCache;
+use Doctrine\Common\Persistence\Mapping\Driver\PHPDriver;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\ORM\Tools\Setup;
 use Psr\Container\ContainerInterface;
 use UltraLite\Container\Container;
@@ -31,9 +30,12 @@ class DoctrineOrmProvider implements ServiceProviderInterface
         $container->set(EntityManager::class, function (ContainerInterface $container): EntityManager {
             $config = $container->get(Config::class);
 
-            $doctrineConfig = Setup::createAnnotationMetadataConfiguration($config->get('doctrine')['mapping'], getenv('APP_ENV') === 'dev');
-            $doctrineConfig->setMetadataDriverImpl(new AnnotationDriver(new AnnotationReader(), $config->get('doctrine')['mapping']));
+            $doctrineConfig = Setup::createConfiguration( $config->get('environment') === 'dev');
+            $doctrineConfig->setMetadataDriverImpl(new PHPDriver($config->get('base_dir') . $config->get('doctrine')['mappings_path']));
             $doctrineConfig->setMetadataCacheImpl(new FilesystemCache($config->get('base_dir') . '/var/cache/doctrine'));
+
+            $namingStrategyClass = $config->get('doctrine')['naming_strategy_class'];
+            $doctrineConfig->setNamingStrategy(new $namingStrategyClass());
 
             $connectionConfig = array_merge($config->get('doctrine')['connection'], [
                 'url' => getenv('DATABASE'),

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Provider;
 
 use App\Controller\MovieController;
-use App\Repository\Movie\MovieRepository;
+use Domain\Movie\MovieRepository;
 use App\Support\Config;
 use App\Support\ServiceProviderInterface;
 use Slim\Interfaces\RouteCollectorInterface;

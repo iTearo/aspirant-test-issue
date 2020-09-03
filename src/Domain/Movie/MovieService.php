@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace Domain\Movie;
 
-use App\Dto\MovieDto;
-use App\Entity\Movie;
-use App\Exception\NotFoundException;
-use App\Repository\Movie\MovieRepository;
+use Domain\Movie\Dto\MovieDto;
+use Domain\Exception\NotFoundException;
 
 class MovieService
 {
