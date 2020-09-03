@@ -22,10 +22,25 @@ function parseAgnosticDsn(string $dsn): ?array
     return null;
 }
 
-$dotenv = new Dotenv();
-$dotenv->load(__DIR__ . '/.env');
+function getAppConfig(): ?array
+{
+    $dotenv = new Dotenv();
+    $dotenv->load(__DIR__ . '/.env');
 
-$appDsn = getenv('DATABASE');
+    return parseAgnosticDsn(
+        getenv('DATABASE')
+    );
+}
+
+function getTestConfig(): ?array
+{
+    $dotenv = new Dotenv();
+    $dotenv->overload(__DIR__ . '/.env.test');
+
+    return parseAgnosticDsn(
+        getenv('DATABASE')
+    );
+}
 
 return
     [
@@ -36,7 +51,8 @@ return
         'environments' => [
             'default_migration_table' => 'phinxlog',
             'default_environment' => 'app',
-            'app' => parseAgnosticDsn($appDsn),
+            'app' => getAppConfig(),
+            'test' => getTestConfig(),
         ],
         'version_order' => 'execution',
         'templates' => [

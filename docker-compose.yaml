@@ -37,3 +37,12 @@ services:
       MYSQL_DATABASE: slim_project
       MYSQL_USER: webmaster
       MYSQL_PASSWORD: webmaster
+
+  database-test:
+    container_name: test-issue-db-test
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: slim_project_test
+      MYSQL_USER: webmaster
+      MYSQL_PASSWORD: webmaster
