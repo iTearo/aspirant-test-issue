@@ -35,7 +35,7 @@ function getAppConfig(): ?array
 function getTestConfig(): ?array
 {
     $dotenv = new Dotenv();
-    $dotenv->overload(__DIR__ . '/.env.test');
+    $dotenv->load(__DIR__ . '/.env.test');
 
     return parseAgnosticDsn(
         getenv('DATABASE')
