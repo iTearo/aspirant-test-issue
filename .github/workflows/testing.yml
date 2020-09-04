@@ -41,9 +41,3 @@ jobs:
     - name: Install dependencies
       if: steps.composer-cache.outputs.cache-hit != 'true'
       run: composer install --prefer-dist --no-progress --no-suggest
-
-    - name: Execute migrations
-      run: bin/console phinx:migrate -e test
-
-    - name: Run PHPUnit
-      run: bin/phpunit --coverage-text --colors=never
